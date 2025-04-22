@@ -32,11 +32,11 @@ export const Navbar = () => {
 
         {/* Buttons & Mobile Menu Toggle */}
         <div className="flex items-center space-x-4">
-        <Link href="/Builder/pages/Index">
+        {/* <Link href="/Builder/pages/Index">
             <Button variant="outline" className="cursor-pointer">
               Builder
             </Button>
-          </Link>
+          </Link> */}
 
           <Link href="/Signin">
             <Button variant="outline" className="hidden md:flex cursor-pointer">
