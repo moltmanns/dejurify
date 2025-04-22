@@ -1,0 +1,124 @@
+
+/* Builder Styles */
+
+.preview-container {
+  min-height: 400px;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.dark .preview-container {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.preview-container.mobile {
+  max-width: 390px;
+  margin: 0 auto;
+}
+
+.preview-container.tablet {
+  max-width: 768px;
+  margin: 0 auto;
+}
+
+.preview-container.desktop {
+  max-width: 100%;
+}
+
+.drop-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 1rem 2rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 50;
+}
+
+.dark .drop-indicator {
+  background-color: rgba(17, 24, 39, 0.9);
+  color: #fff;
+}
+
+.builder-element {
+  position: relative;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+}
+
+.builder-element:hover {
+  outline: 2px solid #3b82f6;
+}
+
+.builder-element.selected {
+  outline: 3px solid #2563eb;
+}
+
+.element-controls {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.dark .element-controls {
+  background-color: #111827;
+  border-color: #374151;
+}
+
+.builder-element:hover .element-controls,
+.builder-element.selected .element-controls {
+  opacity: 1;
+}
+
+.component-library-item {
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dark .component-library-item {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.component-library-item:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.dark .component-library-item:hover {
+  background-color: #111827;
+  border-color: #4b5563;
+}
+
+.bg-dashed {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 4px,
+    currentColor 4px,
+    currentColor 8px
+  );
+  opacity: 0.2;
+}

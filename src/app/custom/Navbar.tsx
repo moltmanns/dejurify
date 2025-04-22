@@ -16,7 +16,7 @@ export const Navbar = () => {
         {/* Logo */}
         <div className="flex items-center space-x-2">
           <Link href="/">
-            <img src="./assets/main-dark 1.png" alt="Main Logo" className="h-8 w-auto" />
+            <img src="/assets/main-dark 1.png" alt="Main Logo" className="h-8 w-auto" />
           </Link>
         </div>
 
@@ -32,6 +32,12 @@ export const Navbar = () => {
 
         {/* Buttons & Mobile Menu Toggle */}
         <div className="flex items-center space-x-4">
+        <Link href="/Builder/pages/Index">
+            <Button variant="outline" className="cursor-pointer">
+              Builder
+            </Button>
+          </Link>
+
           <Link href="/Signin">
             <Button variant="outline" className="hidden md:flex cursor-pointer">
               Sign-in

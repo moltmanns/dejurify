@@ -54,7 +54,7 @@ const PainPoints = () => {
         </div>
       </section>
 
-      <section className="bg-[#010101] text-white pt-16 pb-24 px-10 mt-16 rounded-[24px] max-w-[1400px] mx-auto">
+      <section className="bg-[#010101] text-white py-24 px-10 mt-16 rounded-[24px] max-w-[1400px] mx-auto">
         <div className="flex flex-col md:flex-row items-start lg:items-center justify-between max-w-[1400px] w-full mx-auto gap-6">
           {/* Left Content */}
           <div className="max-w-3xl">
