@@ -1,34 +1,44 @@
-'use client'
+"use client";
 
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import App from './App'
-import Builder from './pages/Builder/page'
-import Index from './pages/Index/page'
-import NotFound from './pages/NotFound/page'
-import Preview from './pages/Preview/page'
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import { supabase } from "@/app/Builder/integrations/supabase/client";
 
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <App />,
-    errorElement: <NotFound />,
-    children: [
-      {
-        index: true,
-        element: <Index />
+export default function BuilderLandingRedirect() {
+  const router = useRouter();
+  const { userId, isSignedIn, isLoaded } = useAuth();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkUserSite = async () => {
+      
+      if (!isLoaded) return;
+
+      if (!isSignedIn || !userId) {
+        router.push("/login");
+        return;
       }
-    ]
-  },
-  {
-    path: '/builder',
-    element: <Builder />
-  },
-  {
-    path: '/preview/:slug',
-    element: <Preview />
-  }
-])
 
-export default function BuilderPage() {
-  return <RouterProvider router={router} />
+      const { data: pages, error } = await supabase
+        .from("pages")
+        .select("id")
+        .eq("user_id", userId)
+        .limit(1);
+
+      if (error || !pages || pages.length === 0) {
+        router.push("/Builder/ChooseTemplate");
+      } else {
+        router.push(`/Builder/${pages[0].id}`);
+      }
+    };
+
+    checkUserSite();
+  }, [isLoaded, isSignedIn, userId, router]);
+
+  return (
+    <div className="p-10 text-center">
+      {loading ? "Loading your website..." : "Almost there..."}
+    </div>
+  );
 }

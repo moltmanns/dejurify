@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react';
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -13,6 +14,18 @@ import {
   FiLogOut,
   FiCreditCard,
 } from "react-icons/fi";
+import { SignOutButton, useUser } from "@clerk/nextjs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/app/Builder/components/ui/alert-dialog";
 
 const navItems = [
   { name: "Dashboard", path: "/Dashboard", icon: <FiHome /> },
@@ -25,6 +38,26 @@ const navItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const { user, isLoaded } = useUser();
+  const [showSignOutDialog, setShowSignOutDialog] = useState(false);
+
+  if (!isLoaded) {
+    return (
+      <aside className="w-64 h-screen bg-background text-foreground border-r border-border p-6 flex flex-col justify-between">
+        {/* Loading skeleton */}
+        <div>
+          <div className="mb-10 h-8 w-32 bg-muted rounded animate-pulse"></div>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="rounded-full bg-muted h-12 w-12 animate-pulse" />
+            <div className="space-y-2">
+              <div className="h-4 bg-muted rounded w-24 animate-pulse" />
+              <div className="h-3 bg-muted rounded w-32 animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside className="w-64 h-screen bg-background text-foreground border-r border-border p-6 flex flex-col justify-between">
@@ -43,18 +76,26 @@ export default function AdminSidebar() {
           </Link>
         </div>
 
-        {/* Profile */}
-        <div className="flex items-center gap-4 mb-6">
-          <Image
-            src="https://placehold.co/48x48"
-            alt="Profile"
-            width={48}
-            height={48}
-            className="rounded-full border border-muted"
-          />
+        {/* Profile - Clerk Integrated */}
+        <div className="flex items-center gap-2 mb-6">
+          <div className="relative h-12 w-12">
+            {/* Updated Image component with unoptimized prop */}
+            <Image
+              src={user?.imageUrl || "https://placehold.co/48x48"}
+              alt="Profile"
+              width={48}
+              height={48}
+              className="rounded-full border border-muted object-cover"
+              unoptimized={true} // Add this for Clerk images
+            />
+          </div>
           <div>
-            <p className="font-semibold text-sm">Smith & Law Group</p>
-            <p className="text-xs text-muted-foreground">Admin Account</p>
+            <p className="font-semibold text-sm">
+              {user?.fullName || "Admin Account"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {user?.primaryEmailAddress?.emailAddress || "Admin"}
+            </p>
           </div>
         </div>
 
@@ -84,15 +125,35 @@ export default function AdminSidebar() {
         </nav>
       </div>
 
-      {/* Sign Out */}
+      {/* Sign Out with Confirmation Dialog */}
       <div className="pt-6">
-        <Button
-          variant="outline"
-          className="w-full flex items-center gap-2 justify-center cursor-pointer"
-        >
-          <FiLogOut />
-          Sign out
-        </Button>
+        <AlertDialog open={showSignOutDialog} onOpenChange={setShowSignOutDialog}>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full flex items-center gap-2 justify-center cursor-pointer"
+            >
+              <FiLogOut />
+              Sign out
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure you want to sign out?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You'll need to sign in again to access your dashboard.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className='cursor-pointer'>Cancel</AlertDialogCancel>
+              <SignOutButton signOutOptions={{ redirectUrl: "/" }}>
+                <AlertDialogAction asChild>
+                  <Button variant="destructive" className='cursor-pointer'>Sign Out</Button>
+                </AlertDialogAction>
+              </SignOutButton>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </aside>
   );

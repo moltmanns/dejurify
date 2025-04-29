@@ -56,7 +56,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Connect GA4 Modal */}
-      <GoogleAnalyticsModal />
+      {/* <GoogleAnalyticsModal /> */}
 
       <DashboardAnalyticsCharts />
 

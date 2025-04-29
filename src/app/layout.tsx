@@ -30,7 +30,13 @@ export const metadata: Metadata = {
 // Root Layout
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
+<ClerkProvider
+  publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+  signInUrl="/Signin"
+  signUpUrl="/Signup"
+  signInFallbackRedirectUrl="/Dashboard"
+  signUpFallbackRedirectUrl="/Dashboard"
+>
       <html>
         <body>
           <ExitIntentPopup />

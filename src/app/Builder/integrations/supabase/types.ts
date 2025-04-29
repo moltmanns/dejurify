@@ -183,6 +183,36 @@ export type Database = {
           },
         ]
       }
+      templates: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          thumbnail_url: string
+          default_site_data: Json
+          category: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string
+          thumbnail_url?: string
+          default_site_data: Json
+          category?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string
+          thumbnail_url?: string
+          default_site_data?: Json
+          category?: string
+          created_at?: string
+        }
+        Relationships: []
+      }      
     }
     Views: {
       [_ in never]: never
