@@ -5,6 +5,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "./custom/CookieConsent";
 import { ExitIntentPopup } from "./custom/ExitIntentPopup";
+import { ThemeProvider } from "next-themes";
 
 import { ClerkProvider } from "@clerk/nextjs";
 
@@ -30,21 +31,23 @@ export const metadata: Metadata = {
 // Root Layout
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-<ClerkProvider
-  publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-  signInUrl="/Signin"
-  signUpUrl="/Signup"
-  signInFallbackRedirectUrl="/Dashboard"
-  signUpFallbackRedirectUrl="/Dashboard"
->
-      <html>
-        <body>
-          <ExitIntentPopup />
-          {children}
-          <Toaster />
-          <CookieConsent />
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <ClerkProvider
+            publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+            signInUrl="/Signin"
+            signUpUrl="/Signup"
+            signInFallbackRedirectUrl="/Dashboard"
+            signUpFallbackRedirectUrl="/Dashboard"
+          >
+            <ExitIntentPopup />
+            {children}
+            <Toaster />
+            <CookieConsent />
+          </ClerkProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }

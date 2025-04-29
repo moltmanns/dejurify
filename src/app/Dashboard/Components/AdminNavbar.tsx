@@ -1,26 +1,35 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { FiBell, FiSettings, FiMoon, FiSun } from "react-icons/fi";
+import { FiBell, FiSettings, FiMoon, FiSun, FiUser, FiLogOut, FiUsers, FiCreditCard } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/app/Builder/components/ui/label";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
+// Dropdown menu components
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/app/Builder/components/ui/dropdown-menu";
+
 export default function AdminNavbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Hydration-safe mount check
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Breadcrumbs
   const segments = pathname
     .split("/")
     .filter(Boolean)
@@ -47,25 +56,44 @@ export default function AdminNavbar() {
         {mounted && (
           <div className="flex items-center gap-2 pr-4">
             <FiSun className="text-muted-foreground" />
-          <Switch
-            id="theme-toggle"
-            checked={theme === "dark"}
-            onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-          />
-          <FiMoon className="text-muted-foreground" />
-        </div>
+            <Switch
+              id="theme-toggle"
+              className="cursor-pointer"
+              checked={theme === "dark"}
+              onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+            />
+            <FiMoon className="text-muted-foreground" />
+          </div>
         )}
 
-        {/* Notification Icon */}
-        <Button variant="ghost" size="icon" className="relative">
-          <FiBell className="w-5 h-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-        </Button>
-
-        {/* Settings */}
-        <Button variant="ghost" size="icon">
-          <FiSettings className="w-5 h-5" />
-        </Button>
+        {/* Settings Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="cursor-pointer">
+              <FiSettings className="w-5 h-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuLabel>Dashboard Settings</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => router.push("/profile")} className=" cursor-pointer">
+              <FiUser className="mr-2 h-4 w-4" /> Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/billing")} className=" cursor-pointer">
+              <FiCreditCard className="mr-2 h-4 w-4" /> Billing
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/users")} className=" cursor-pointer">
+              <FiUsers className="mr-2 h-4 w-4" /> Manage Users
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-red-500 cursor-pointer"
+              onClick={() => router.push("/logout")}
+            >
+              <FiLogOut className="mr-2 h-4 w-4" /> Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* CTA */}
         <Button
@@ -76,8 +104,6 @@ export default function AdminNavbar() {
         >
           <Link href="/Builder">+ Create Website</Link>
         </Button>
-
-
       </div>
     </header>
   );

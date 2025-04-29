@@ -78,7 +78,7 @@ export default function AdminSidebar() {
 
         {/* Profile - Clerk Integrated */}
         <div className="flex items-center gap-2 mb-6">
-          <div className="relative h-12 w-12">
+          <div className="relative h-10 w-10">
             {/* Updated Image component with unoptimized prop */}
             <Image
               src={user?.imageUrl || "https://placehold.co/48x48"}

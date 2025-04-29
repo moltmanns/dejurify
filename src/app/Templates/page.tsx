@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "../custom/Navbar";
 import Footer from "../custom/Footer";
 import { Badge } from "@/components/ui/badge";
@@ -29,11 +29,27 @@ const templates = [
 export default function TemplatesPage() {
   const [selectedCategory, setSelectedCategory] = useState("All Products");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false); // New state for modal visibility
 
   const filteredTemplates =
     selectedCategory === "All Products"
       ? templates
       : templates.filter((template) => template.category === selectedCategory);
+
+  // Handle modal open/close and body scroll
+  useEffect(() => {
+    if (selectedTemplate) {
+      setIsModalOpen(true);
+      document.body.style.overflow = "hidden";
+    } else {
+      setIsModalOpen(false);
+      document.body.style.overflow = "auto";
+    }
+  }, [selectedTemplate]);
+
+  const closeModal = () => {
+    setSelectedTemplate(null);
+  };
 
   return (
     <main className="mx-6">
@@ -78,7 +94,11 @@ export default function TemplatesPage() {
               onClick={() => setSelectedTemplate(template)}
             >
               <div className="w-full h-40 bg-[#808080] rounded-lg mb-4 overflow-hidden">
-                <img src={template.image} alt={template.name} className="w-full h-full object-cover" />
+                <img 
+                  src={template.image} 
+                  alt={template.name} 
+                  className="w-full h-full object-cover" 
+                />
               </div>
               <h3 className="text-sm font-medium text-[#0a0a0a]">{template.name}</h3>
             </div>
@@ -90,69 +110,56 @@ export default function TemplatesPage() {
       <Footer />
 
       {/* Template Preview Modal */}
+      {isModalOpen && selectedTemplate && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg overflow-hidden flex flex-col lg:flex-row w-full max-w-6xl h-[90vh] shadow-xl relative">
+            
+            {/* Close Button */}
+            <button 
+              className="absolute top-4 right-4 z-10 text-[#0a0a0a] hover:text-[#3c3c3c] cursor-pointer bg-white rounded-full p-1"
+              onClick={closeModal}
+            >
+              <AiOutlineClose className="w-6 h-6" />
+            </button>
 
-{selectedTemplate && (
-  <>
-    {/* Prevent background scrolling when modal is open */}
-    <style jsx global>{`
-      body {
-        overflow: hidden;
-      }
-    `}</style>
+            {/* Template Preview - Full width on mobile, 80% on desktop */}
+            <div className="w-full lg:w-[80%] h-[60%] lg:h-full bg-gray-100 relative">
+              <img
+                src={selectedTemplate.image}
+                alt={selectedTemplate.name}
+                className="w-full h-full object-contain"
+              />
+            </div>
 
-    {/* Modal Overlay */}
-    <div className="fixed inset-0 bg-black/50 transition-opacity flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg overflow-hidden flex w-[90vw] lg:w-[80vw] h-[85vh] shadow-xl relative">
-        
-        {/* Close Button */}
-        <button 
-          className="absolute top-4 right-4 text-[#0a0a0a] hover:text-[#3c3c3c] cursor-pointer"
-          onClick={() => {
-            setSelectedTemplate(null);
-            document.body.style.overflow = "auto"; // Restore scrolling on close
-          }}
-        >
-          <AiOutlineClose className="w-6 h-6" />
-        </button>
+            {/* Description Section - Full width on mobile, 20% on desktop */}
+            <div className="w-full lg:w-[20%] bg-white text-[#0a0a0a] p-6 flex flex-col border-t lg:border-t-0 lg:border-l border-[#808080]">
+              
+              {/* Template Name */}
+              <h2 className="text-xl font-semibold">{selectedTemplate.name}</h2>
+              
+              {/* Divider */}
+              <hr className="border-[#808080] my-4" />
 
-        {/* Template Preview - 80% width */}
-        <div className="w-[80%] bg-gray-100 relative">
-          <iframe
-            src={selectedTemplate.image} // Change to actual HTML preview
-            className="w-full h-full overflow-y-auto border-r-1 border-bg-[#808080]"
-            title="Template Preview"
-          ></iframe>
-        </div>
+              {/* Tags */}
+              <div className="flex flex-wrap gap-2 mt-3">
+                {selectedTemplate.tags.map((tag, index) => (
+                  <Badge key={index} variant="outline" className="border-[#808080] text-[#0a0a0a]">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
 
-        {/* Description Section - 20% width */}
-        <div className="w-[20%] bg-white text-[#0a0a0a] p-6 flex flex-col">
-          
-          {/* Template Name */}
-          <h2 className="text-xl font-semibold">{selectedTemplate.name}</h2>
-          
-          {/* Divider */}
-          <hr className="border-[#808080] my-4" />
+              {/* Description */}
+              <p className="text-sm text-[#0a0a0a] mt-4">{selectedTemplate.description}</p>
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            {selectedTemplate.tags.map((tag, index) => (
-              <Badge key={index} variant="outline" className="border-[#808080] text-[#0a0a0a]">
-                {tag}
-              </Badge>
-            ))}
+              {/* Get Started Button */}
+              <Button className="mt-auto w-full cursor-pointer">
+                Get Started
+              </Button>
+            </div>
           </div>
-
-          {/* Description */}
-          <p className="text-sm text-[#0a0a0a] mt-4">{selectedTemplate.description}</p>
-
-          {/* Get Started Button */}
-          <Button className="mt-auto w-full cursor-pointer">Get Started</Button>
-
         </div>
-      </div>
-    </div>
-  </>
-)}
+      )}
     </main>
   );
 }
