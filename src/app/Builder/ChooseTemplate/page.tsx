@@ -2,183 +2,270 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { supabase } from "@/app/Builder/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
+import { toast } from "@/app/Builder/components/ui/sonner";
 import { Button } from "@/components/ui/button";
-import { AiOutlineClose } from "react-icons/ai";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/app/Builder/components/ui/tabs";
+import { ArrowRight, X, CheckCircle } from "lucide-react";
 
 interface Template {
   id: string;
   name: string;
   description: string;
-  thumbnail_url: string;
   category: string;
+  thumbnail_url: string;
+  access_tier: "free" | "premium";
+  pages?: string[];
 }
 
-const practiceAreas = [
-  "All",
-  "Personal Injury",
-  "Family",
-  "Criminal Defense",
-  "Estate",
-  "Corporate",
-  "Real Estate",
-  "Divorce",
-];
+const templateCategories = ["Free", "Premium"];
 
 export default function ChooseTemplatePage() {
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [confirmedTemplateId, setConfirmedTemplateId] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string>("Free");
   const [loading, setLoading] = useState<boolean>(true);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const router = useRouter();
+  const { user, isLoaded } = useUser();
+  const plan = user?.publicMetadata?.subscription_plan || "starter";
 
   useEffect(() => {
     const fetchTemplates = async () => {
-      const { data, error } = await supabase
-        .from("templates")
-        .select("*");
-
+      const { data, error } = await supabase.from("templates").select("*");
       if (error) {
-        console.error("Failed to fetch templates:", error);
+        console.error("Error fetching templates:", error);
       } else {
         setTemplates(data || []);
       }
       setLoading(false);
     };
-
     fetchTemplates();
   }, []);
 
-  const handleSelectTemplate = async (templateId: string) => {
+  useEffect(() => {
+    if (!isLoaded || templates.length === 0) return;
+    const storedId = localStorage.getItem("confirmedTemplateId");
+    if (!storedId) return;
+    const found = templates.find((t) => t.id === storedId);
+    const isAllowed = found?.access_tier === "free" || plan !== "starter";
+    if (found && isAllowed) {
+      setConfirmedTemplateId(storedId);
+    }
+  }, [isLoaded, templates]);
+
+  const filteredTemplates = templates.filter((template) =>
+    activeCategory === "Free"
+      ? template.access_tier === "free"
+      : template.access_tier === "premium"
+  );
+
+  const handleTemplateSelect = (template: Template) => {
+    if (template.access_tier === "premium" && plan === "starter") {
+      setShowUpgradeModal(true);
+      return;
+    }
+    setSelectedTemplate(template);
+  };
+
+  const handleCreateProject = async () => {
+    const chosenTemplate = templates.find((t) => t.id === confirmedTemplateId);
+    if (!chosenTemplate) {
+      toast.error("Please select a template first");
+      return;
+    }
     try {
       const res = await fetch("/api/clone-template", {
         method: "POST",
-        body: JSON.stringify({ templateId }),
+        body: JSON.stringify({ templateId: chosenTemplate.id }),
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
-      
-
-      if (!res.ok) {
-        throw new Error("Failed to clone template");
-      }
-
+      if (!res.ok) throw new Error("Failed to clone template");
       const { siteId } = await res.json();
-      router.push(`/Builder/${siteId}`);
-    } catch (error) {
-      console.error("Error selecting template", error);
+      toast.success("Template cloned successfully");
+      router.push(`/Builder/page/${siteId}`);
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred while creating the project");
     }
   };
 
-  const filteredTemplates = selectedCategory === "All"
-    ? templates
-    : templates.filter((template) => template.category === selectedCategory);
+  const handleStartFromScratch = () => {
+    router.push("/custom-site");
+  };
+  
 
-  if (loading) return <div className="p-10 text-center">Loading templates...</div>;
+  const confirmTemplate = (id: string) => {
+    setConfirmedTemplateId(id);
+    localStorage.setItem("confirmedTemplateId", id);
+    setSelectedTemplate(null);
+  };
+
+  if (loading || !isLoaded) return <div className="p-10 text-center">Loading templates...</div>;
 
   return (
-    <main className="mx-6">
-      <div className="max-w-[1400px] mx-auto mt-20 mb-40">
-        
-        {/* Header Section */}
-        <div className="text-center mb-20">
-          <Badge variant="outline">Templates</Badge>
-          <h1 className="text-4xl lg:text-6xl font-semibold tracking-tighter mt-6">
-            Choose Your Law Firm Website
-          </h1>
-          <p className="mt-8 text-gray-600">
-            Select from professionally designed templates tailored for attorneys.
-          </p>
-        </div>
+    <div className="min-h-screen bg-background flex items-center justify-center px-6">
+      <div className="w-full max-w-[1400px] flex flex-col gap-10">
+        <h2 className="text-3xl font-bold">Choose a Template</h2>
 
-        {/* Filter Buttons */}
-        <div className="flex flex-wrap gap-2 mb-8 justify-center">
-          {practiceAreas.map((area) => (
-            <button
-              key={area}
-              onClick={() => setSelectedCategory(area)}
-              className={`px-3 py-1 text-sm rounded-full cursor-pointer border ${
-                selectedCategory === area
-                  ? "bg-[#0a0a0a] text-white border-[#3c3c3c]"
-                  : "text-[#3c3c3c] border-[#808080] hover:bg-[#0a0a0a] hover:text-white"
-              } transition`}
-            >
-              {area}
-            </button>
-          ))}
-        </div>
+        <Tabs defaultValue="Free" value={activeCategory} onValueChange={setActiveCategory}>
+          <TabsList className="mb-6 flex gap-2 overflow-x-auto whitespace-nowrap justify-start">
+            {templateCategories.map((category) => (
+              <TabsTrigger
+                key={category}
+                value={category}
+                className="cursor-pointer transition hover:text-primary hover:underline"
+              >
+                {category}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        {/* Template Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredTemplates.map((template) => (
-            <div 
-              key={template.id} 
-              className="p-4 border rounded-lg shadow-sm cursor-pointer transition hover:shadow-lg"
-              onClick={() => setSelectedTemplate(template)}
-            >
-              <div className="w-full h-40 bg-[#808080] rounded-lg mb-4 overflow-hidden">
-                <img src={template.thumbnail_url} alt={template.name} className="w-full h-full object-cover" />
+          <TabsContent value={activeCategory}>
+            <div className="h-[500px] overflow-y-auto pl-2 pr-4 py-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredTemplates.map((template) => {
+                  const isSelected = confirmedTemplateId === template.id;
+                  return (
+                    <div
+                      key={template.id}
+                      onClick={() => handleTemplateSelect(template)}
+                      className={`relative border rounded-lg overflow-hidden cursor-pointer transition-all hover:shadow-md ${
+                        isSelected ? "ring-2 ring-primary border-primary" : "hover:border-gray-400"
+                      }`}
+                    >
+                      <div className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded-full shadow-sm ${
+                          template.access_tier === "free" ? "bg-[#707070]" : "bg-[#0a0a0a]"
+                        } text-white`}>
+                        {template.access_tier === "free" ? "Free" : "Pro"}
+                      </div>
+
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 bg-primary text-white text-xs px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
+                          <CheckCircle className="w-4 h-4" />
+                          Selected
+                        </div>
+                      )}
+
+                      <div className="aspect-video bg-muted">
+                        <img
+                          src={template.thumbnail_url}
+                          alt={template.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="text-lg font-semibold">{template.name}</h3>
+                        <p className="text-muted-foreground text-sm mt-1">{template.description}</p>
+                        <div className="mt-3 flex flex-wrap gap-1">
+                          {(template.pages || []).map((page) => (
+                            <span
+                              key={`${template.id}-${page}`}
+                              className="bg-muted px-2 py-0.5 text-xs rounded"
+                            >
+                              {page}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <h3 className="text-sm font-medium text-[#0a0a0a]">{template.name}</h3>
+
+              {activeCategory === "Free" && plan === "starter" && (
+                <div className="mt-8 text-center text-sm text-muted-foreground">
+                  <p>Want access to more premium templates?</p>
+                  <Button className="mt-2 cursor-pointer" onClick={() => router.push("/Dashboard/billing")}>
+                    Upgrade to Pro
+                  </Button>
+                </div>
+              )}
             </div>
-          ))}
+          </TabsContent>
+        </Tabs>
+
+        <div className="flex justify-between gap-4">
+          <Button variant="outline" onClick={handleStartFromScratch} className="cursor-pointer">
+            Start from scratch
+          </Button>
+          <Button
+            onClick={handleCreateProject}
+            disabled={!confirmedTemplateId}
+            className={`gap-2 transition cursor-pointer ${
+              confirmedTemplateId
+                ? "bg-primary text-white hover:bg-primary/90"
+                : "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+            }`}
+          >
+            Continue with template
+            <ArrowRight size={16} />
+          </Button>
         </div>
       </div>
 
-      {/* Template Preview Modal */}
       {selectedTemplate && (
-        <>
-          {/* Prevent background scrolling when modal open */}
-          <style jsx global>{`
-            body {
-              overflow: hidden;
-            }
-          `}</style>
-
-          <div className="fixed inset-0 bg-black/50 transition-opacity flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg overflow-hidden flex w-[90vw] lg:w-[80vw] h-[85vh] shadow-xl relative">
-              
-              {/* Close Button */}
-              <button 
-                className="absolute top-4 right-4 text-[#0a0a0a] hover:text-[#3c3c3c] cursor-pointer"
-                onClick={() => {
-                  setSelectedTemplate(null);
-                  document.body.style.overflow = "auto"; // Restore scrolling on close
-                }}
-              >
-                <AiOutlineClose className="w-6 h-6" />
-              </button>
-
-              {/* Template Preview (Left) */}
-              <div className="w-[80%] bg-gray-100 relative">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white w-[90vw] max-w-6xl h-[80vh] rounded-lg overflow-hidden relative shadow-xl">
+            <button
+              onClick={() => setSelectedTemplate(null)}
+              className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 cursor-pointer transition"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <div className="flex h-full">
+              <div className="w-4/5 bg-gray-100">
                 <iframe
                   src={selectedTemplate.thumbnail_url}
-                  className="w-full h-full overflow-y-auto border-r-1 border-bg-[#808080]"
                   title="Template Preview"
-                ></iframe>
+                  className="w-full h-full"
+                />
               </div>
-
-              {/* Template Info + Get Started (Right) */}
-              <div className="w-[20%] bg-white text-[#0a0a0a] p-6 flex flex-col">
-                <h2 className="text-xl font-semibold">{selectedTemplate.name}</h2>
-                <hr className="border-[#808080] my-4" />
-                <p className="text-sm text-[#0a0a0a] mt-4">{selectedTemplate.description}</p>
-
-                {/* Get Started */}
+              <div className="w-1/4 p-6 overflow-y-auto flex flex-col">
+                <h2 className="text-lg font-bold mt-10 mb-2">{selectedTemplate.name}</h2>
+                <p className="text-sm text-muted-foreground mb-6">{selectedTemplate.description}</p>
                 <Button
-                  className="mt-auto w-full"
-                  onClick={() => handleSelectTemplate(selectedTemplate.id)}
+                  className="w-full mt-auto cursor-pointer"
+                  onClick={() => confirmTemplate(selectedTemplate.id)}
                 >
-                  Get Started
+                  Use this Template
                 </Button>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
-    </main>
+
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white max-w-md w-full rounded-lg p-6 shadow-xl">
+            <h2 className="text-xl font-semibold mb-2">Upgrade to Pro</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              This template is part of the Pro plan. Upgrade your subscription to unlock all premium designs and features.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setShowUpgradeModal(false)}
+                className="cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button onClick={() => router.push("/Dashboard/billing")} className="cursor-pointer">
+                Upgrade to Pro
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

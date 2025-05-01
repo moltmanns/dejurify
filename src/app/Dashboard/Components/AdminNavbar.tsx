@@ -102,7 +102,7 @@ export default function AdminNavbar() {
           variant="default"
           className="rounded-md px-4 py-2 text-sm font-medium bg-black text-white hover:bg-gray-900"
         >
-          <Link href="/Builder">+ Create Website</Link>
+          <Link href="/Builder/ChooseTemplate">+ Create Website</Link>
         </Button>
       </div>
     </header>
