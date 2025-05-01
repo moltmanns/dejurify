@@ -223,11 +223,12 @@ export default function ChooseTemplatePage() {
             </button>
             <div className="flex h-full">
               <div className="w-4/5 bg-gray-100">
-                <iframe
-                  src={selectedTemplate.thumbnail_url}
-                  title="Template Preview"
-                  className="w-full h-full"
+              <iframe
+                  src={`/preview/${selectedTemplate.id}`}
+                  title="Live Template Preview"
+                  className="w-full h-full border-0"
                 />
+
               </div>
               <div className="w-1/4 p-6 overflow-y-auto flex flex-col">
                 <h2 className="text-lg font-bold mt-10 mb-2">{selectedTemplate.name}</h2>
